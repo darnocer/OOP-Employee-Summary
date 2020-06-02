@@ -66,21 +66,41 @@ const promptUser = () => {
         ])
 
         .then(({ roleInfo, more }) => {
-          console.log(`${role}`);
+          console.log(role);
 
-          let newMember = new Intern(name, id, email, roleInfo);
-          teamArr.push(newMember);
+          let newMember;
+
+          // make this DRY
+          switch (role) {
+            case "Intern":
+              newMember = new Intern(name, id, email, roleInfo);
+              break;
+            case "Manager":
+              newMember = new Manager(name, id, email, roleInfo);
+              break;
+            case "Engineer":
+              newMember = new Engineer(name, id, email, roleInfo);
+              break;
+          }
+
+          teamArr.push(newMember); // role info is not being pushed to obj
 
           if (more === true) {
             promptUser();
+          } else {
+            render();
           }
-
-          console.log(teamArr);
         });
     });
 };
 
 promptUser();
+
+// VALIDATION TESTS
+// - name must be string
+// - id must be number
+// - email must contain @
+// - teamArr must contain at least 2 values. must contain at least 1 mamager
 
 // Helpful Hints for Unit 10 Homework:
 // The app.js file includes a set of require and declaration statements. You'll want to use all of these for the project.
