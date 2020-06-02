@@ -5,11 +5,87 @@ const inquirer = require("inquirer");
 const path = require("path");
 const fs = require("fs");
 
-const OUTPUT_DIR = path.resolve(__dirname, "output");
+const OUTPUT_DIR = path.resolve("./output", "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
 
+let teamArr = [];
+
+const promptUser = () => {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        message: "Team Member's Name: ",
+        name: "name",
+      },
+      {
+        type: "input",
+        message: "Team Member's ID: ",
+        name: "id",
+      },
+      {
+        type: "input",
+        message: "Team Member's Email: ",
+        name: "email",
+      },
+      {
+        type: "list",
+        message: "Select Team Member's Role: ",
+        choices: ["Engineer", "Intern", "Manager"],
+        name: "role",
+      },
+    ])
+    .then(({ name, id, email, role }) => {
+      let roleInfo = "";
+
+      switch (role) {
+        case "Intern":
+          roleInfo = "school";
+          break;
+        case "Engineer":
+          roleInfo = "github";
+          break;
+        case "Manager":
+          roleInfo = "office";
+          break;
+      }
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            message: `Enter Team Member's ${roleInfo}: `,
+            name: `${roleInfo}`,
+          },
+          {
+            type: "confirm",
+            message: "Would you like to add more team members?",
+            name: "more",
+          },
+        ])
+
+        .then(({ roleInfo, more }) => {
+          console.log(`${role}`);
+
+          let newMember = new Intern(name, id, email, roleInfo);
+          teamArr.push(newMember);
+
+          if (more === true) {
+            promptUser();
+          }
+
+          console.log(teamArr);
+        });
+    });
+};
+
+promptUser();
+
+// Helpful Hints for Unit 10 Homework:
+// The app.js file includes a set of require and declaration statements. You'll want to use all of these for the project.
+// in the lib folder you'll find a fully completed htmlRenderer script, it exports a function: render() which will take in an array of employees and return an html page for you. You'll want to write that file somewhere...
+// Use the test folder to develop your lib folder, but make sure that you keep your inquirers to app.js
 
 // Write code to use inquirer to gather information about the development team members,
 // and to create objects for each team member (using the correct classes as blueprints!)
