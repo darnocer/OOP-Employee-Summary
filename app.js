@@ -6,7 +6,7 @@ const path = require("path");
 const fs = require("fs");
 
 // ** replace ___dirname ?
-const OUTPUT_DIR = path.resolve("./templates/output", "output");
+const OUTPUT_DIR = path.resolve("./templates", "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
