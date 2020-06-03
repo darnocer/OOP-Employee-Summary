@@ -5,13 +5,23 @@ const inquirer = require("inquirer");
 const path = require("path");
 const fs = require("fs");
 
-const OUTPUT_DIR = path.resolve("./output", "output");
+// ** replace ___dirname ?
+const OUTPUT_DIR = path.resolve("./templates/output", "output");
 const outputPath = path.join(OUTPUT_DIR, "team.html");
 
 const render = require("./lib/htmlRenderer");
 
-let teamArr = [];
+// ** VALIDATION TESTS - can be done with inquirer?
+// - name must be string
+// - id must be number
+// - email must contain @
+// - employees must contain at least 1 mamager
+// - employees must contain at least 2 values
 
+// push each employee object to array
+let employees = [];
+
+// prompt user for team member info
 const promptUser = () => {
   inquirer
     .prompt([
@@ -37,70 +47,93 @@ const promptUser = () => {
         name: "role",
       },
     ])
-    .then(({ name, id, email, role }) => {
-      let roleInfo = "";
-
-      switch (role) {
+    .then((response) => {
+      // identify role-specific info by role
+      switch (response.role) {
         case "Intern":
-          roleInfo = "school";
+          response.roleInfo = "school";
           break;
         case "Engineer":
-          roleInfo = "github";
+          response.roleInfo = "github";
           break;
         case "Manager":
-          roleInfo = "office";
+          response.roleInfo = "office";
           break;
       }
-      inquirer
-        .prompt([
-          {
-            type: "input",
-            message: `Enter Team Member's ${roleInfo}: `,
-            name: `${roleInfo}`,
-          },
-          {
-            type: "confirm",
-            message: "Would you like to add more team members?",
-            name: "more",
-          },
-        ])
+      console.log(response.roleInfo);
 
-        .then(({ roleInfo, more }) => {
-          console.log(role);
-
-          let newMember;
-
-          // make this DRY
-          switch (role) {
-            case "Intern":
-              newMember = new Intern(name, id, email, roleInfo);
-              break;
-            case "Manager":
-              newMember = new Manager(name, id, email, roleInfo);
-              break;
-            case "Engineer":
-              newMember = new Engineer(name, id, email, roleInfo);
-              break;
-          }
-
-          teamArr.push(newMember); // role info is not being pushed to obj
-
-          if (more === true) {
-            promptUser();
-          } else {
-            render();
-          }
-        });
+      roleQuestions(response);
     });
+
+  const roleQuestions = (employee) => {
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          message: `Enter Team Member's ${employee.roleInfo}: `,
+          name: "roleInput",
+        },
+        {
+          type: "confirm",
+          message: "Would you like to add more team members?",
+          name: "more",
+        },
+      ])
+
+      .then((response) => {
+        // **  need to access response.roleInfo AND response.more
+        // ** response[roleInfo] - roleInfo property is a variable so needs to be accessed via bracket notation
+        // ** .then({ roleInfo, more}) was not able to pass roleInfo (undefined)
+
+        let newMember;
+
+        // ** make this DRY - can "Intern", "Manager", "Engineer" be replaced with 'role'
+        switch (employee.role) {
+          case "Intern":
+            newMember = new Intern(
+              employee.name,
+              employee.id,
+              employee.email,
+              response.roleInput
+            );
+            break;
+          case "Manager":
+            newMember = new Manager(
+              employee.name,
+              employee.id,
+              employee.email,
+              response.roleInput
+            );
+            break;
+          case "Engineer":
+            newMember = new Engineer(
+              employee.name,
+              employee.id,
+              employee.email,
+              response.roleInput
+            );
+            break;
+        }
+
+        employees.push(newMember);
+
+        if (response.more === true) {
+          promptUser();
+        } else {
+          buildTeam();
+        }
+      });
+  };
 };
 
-promptUser();
+function buildTeam() {
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    fs.mkdirSync(OUTPUT_DIR);
+  }
+  fs.writeFileSync(outputPath, render(employees), "utf-8");
+}
 
-// VALIDATION TESTS
-// - name must be string
-// - id must be number
-// - email must contain @
-// - teamArr must contain at least 2 values. must contain at least 1 mamager
+promptUser();
 
 // Helpful Hints for Unit 10 Homework:
 // The app.js file includes a set of require and declaration statements. You'll want to use all of these for the project.
